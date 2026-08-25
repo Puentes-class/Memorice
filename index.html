@@ -1,0 +1,188 @@
+import React, { useState, useEffect } from 'react';
+
+// 1. Definimos los elementos base (un solo elemento por concepto)
+const BASE_ITEMS = [
+  {
+    idName: 'sol',
+    title: 'Sol',
+    description: 'Nuestra estrella central y principal fuente de luz y energía.',
+    image: 'image_agent_tag_4618856255408028043',
+  },
+  {
+    idName: 'luna',
+    title: 'Luna',
+    description: 'El único satélite natural de la Tierra.',
+    image: 'image_agent_tag_4618856255408026869',
+  },
+  {
+    idName: 'marte',
+    title: 'Marte',
+    description: 'El planeta rojo, conocido por su óxido de hierro en superficie.',
+    image: 'image_agent_tag_4618856255408029204',
+  },
+  {
+    idName: 'jupiter',
+    title: 'Júpiter',
+    description: 'El planeta más grande del Sistema Solar.',
+    image: 'image_agent_tag_4618856255408029217',
+  },
+  {
+    idName: 'saturno',
+    title: 'Saturno',
+    description: 'Famoso por su vistoso sistema de anillos brillantes.',
+    image: 'image_agent_tag_4618856255408028030',
+  },
+  {
+    idName: 'agujero_negro',
+    title: 'Agujero Negro',
+    description: 'Región del espacio donde la gravedad es tan fuerte que nada escapa.',
+    image: 'image_agent_tag_4618856255408028630',
+  },
+  {
+    idName: 'nebulosa',
+    title: 'Nebulosa',
+    description: 'Gigantesca nube de gas y polvo en el espacio, cuna de estrellas.',
+    image: 'image_agent_tag_4618856255408028617',
+  },
+  {
+    idName: 'cometa',
+    title: 'Cometa',
+    description: 'Cuerpo celeste de hielo y polvo que despliega una cola al acercarse al Sol.',
+    image: 'image_agent_tag_4618856255408025695',
+  },
+];
+
+// Función para mezclar un arreglo (Algoritmo Fisher-Yates)
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+export default function MemoryGame() {
+  const [cards, setCards] = useState([]);
+  const [flipped, setFlipped] = useState([]);
+  const [matched, setMatched] = useState([]);
+  const [disabled, setDisabled] = useState(false);
+
+  // Inicializar o reiniciar el juego
+  const initializeGame = () => {
+    // Duplicamos cada elemento para crear exactamente 2 cartas idénticas
+    const pairedCards = BASE_ITEMS.flatMap((item, index) => [
+      { ...item, uniqueId: `${item.idName}-1` },
+      { ...item, uniqueId: `${item.idName}-2` },
+    ]);
+
+    // Mezclamos las 16 cartas aleatoriamente
+    setCards(shuffleArray(pairedCards));
+    setFlipped([]);
+    setMatched([]);
+    setDisabled(false);
+  };
+
+  useEffect(() => {
+    initializeGame();
+  }, []);
+
+  const handleCardClick = (index) => {
+    // Previene clics en cartas ya volteadas, emparejadas o si la interacción está bloqueada
+    if (disabled || flipped.includes(index) || matched.includes(cards[index].idName)) {
+      return;
+    }
+
+    const newFlipped = [...flipped, index];
+    setFlipped(newFlipped);
+
+    // Si ya seleccionamos 2 cartas
+    if (newFlipped.length === 2) {
+      setDisabled(true);
+      const [firstIndex, secondIndex] = newFlipped;
+
+      // Comprobamos si pertenecen al mismo idName (mismo concepto)
+      if (cards[firstIndex].idName === cards[secondIndex].idName) {
+        setMatched((prev) => [...prev, cards[firstIndex].idName]);
+        setFlipped([]);
+        setDisabled(false);
+      } else {
+        // Si no coinciden, se ocultan tras 1 segundo
+        setTimeout(() => {
+          setFlipped([]);
+          setDisabled(false);
+        }, 1000);
+      }
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
+      <h2>Juego de Memoria Astronómico</h2>
+      <button 
+        onClick={initializeGame}
+        style={{
+          padding: '10px 20px',
+          fontSize: '16px',
+          backgroundColor: '#4A90E2',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer',
+          marginBottom: '20px'
+        }}
+      >
+        Reiniciar Juego
+      </button>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '15px'
+      }}>
+        {cards.map((card, index) => {
+          const isFlipped = flipped.includes(index) || matched.includes(card.idName);
+
+          return (
+            <div
+              key={card.uniqueId}
+              onClick={() => handleCardClick(index)}
+              style={{
+                height: '180px',
+                border: '1px solid #ccc',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                backgroundColor: isFlipped ? '#fff' : '#1e1e2f',
+                color: isFlipped ? '#000' : '#fff',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '10px',
+                boxSizing: 'border-box',
+                transition: 'transform 0.3s, background-color 0.3s',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+              }}
+            >
+              {isFlipped ? (
+                <>
+                  <img 
+                    src={card.image} 
+                    alt={card.title} 
+                    style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '50%' }} 
+                  />
+                  <strong style={{ marginTop: '8px', fontSize: '14px' }}>{card.title}</strong>
+                  <p style={{ fontSize: '11px', color: '#555', margin: '4px 0 0 0' }}>
+                    {card.description}
+                  </p>
+                </>
+              ) : (
+                <span style={{ fontSize: '24px' }}>✨</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
