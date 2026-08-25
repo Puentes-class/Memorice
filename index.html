@@ -1,202 +1,300 @@
-import React, { useState, useEffect } from 'react';
-
-// 1. Definimos los elementos base (un solo elemento por concepto)
-const BASE_ITEMS = [
-  {
-    idName: 'sol',
-    title: 'Sol',
-    description: 'Nuestra estrella central y principal fuente de luz y energía.',
-    image: 'sol.jpeg',
-  },
-  {
-    idName: 'luna',
-    title: 'Luna',
-    description: 'El único satélite natural de la Tierra.',
-    image: 'luna.jpeg',
- },
-  {
-    idName: 'mercurio',
-    title: 'Mercurio',
-    description: 'El planeta más rápido del Sistema Solar.',
-    image: 'mercurio.jpeg',
-  },
-  {
-
-    idName: 'venus',
-    title: 'Venus',
-    description: 'El planeta más caliente.',
-    image: 'venus.jpeg',
- },
-  {
-    idName: 'tierra',
-    title: 'Tierra',
-    description: 'El único planeta que tiene vida.',
-    image: 'tierra.jpeg',
- },
-  {
-
-    idName: 'marte',
-    title: 'Marte',
-    description: 'El planeta rojo, conocido por su óxido de hierro en superficie.',
-    image: 'marte.jpeg',
-  },
-  {
-    idName: 'jupiter',
-    title: 'Júpiter',
-    description: 'El planeta más grande del Sistema Solar.',
-    image: 'jupiter.jpeg',
-  },
-  {
-    idName: 'saturno',
-    title: 'Saturno',
-    description: 'Famoso por su vistoso sistema de anillos brillantes.',
-    image: 'saturno.jpeg',
-  },
-  {
-    idName: 'urano',
-    title: 'Urano',
-    description: 'El planeta que gira acostado.',
-    image: 'urano.jpeg',
-  },
-  {
-    idName: 'neptuno',
-    title: 'Neptuno',
-    description: 'El planeta con vientos supersónicos',
-    image: 'neptuno.jpeg',
-  },
-];
-
-// Función para mezclar un arreglo (Algoritmo Fisher-Yates)
-const shuffleArray = (array) => {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-};
-
-export default function MemoryGame() {
-  const [cards, setCards] = useState([]);
-  const [flipped, setFlipped] = useState([]);
-  const [matched, setMatched] = useState([]);
-  const [disabled, setDisabled] = useState(false);
-
-  // Inicializar o reiniciar el juego
-  const initializeGame = () => {
-    // Duplicamos cada elemento para crear exactamente 2 cartas idénticas
-    const pairedCards = BASE_ITEMS.flatMap((item, index) => [
-      { ...item, uniqueId: `${item.idName}-1` },
-      { ...item, uniqueId: `${item.idName}-2` },
-    ]);
-
-    // Mezclamos las 16 cartas aleatoriamente
-    setCards(shuffleArray(pairedCards));
-    setFlipped([]);
-    setMatched([]);
-    setDisabled(false);
-  };
-
-  useEffect(() => {
-    initializeGame();
-  }, []);
-
-  const handleCardClick = (index) => {
-    // Previene clics en cartas ya volteadas, emparejadas o si la interacción está bloqueada
-    if (disabled || flipped.includes(index) || matched.includes(cards[index].idName)) {
-      return;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Juego de Memoria Astronómico</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    const newFlipped = [...flipped, index];
-    setFlipped(newFlipped);
+    body {
+      background-color: #0d1117;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
 
-    // Si ya seleccionamos 2 cartas
-    if (newFlipped.length === 2) {
-      setDisabled(true);
-      const [firstIndex, secondIndex] = newFlipped;
+    .container {
+      max-width: 850px;
+      width: 100%;
+      text-align: center;
+    }
 
-      // Comprobamos si pertenecen al mismo idName (mismo concepto)
-      if (cards[firstIndex].idName === cards[secondIndex].idName) {
-        setMatched((prev) => [...prev, cards[firstIndex].idName]);
-        setFlipped([]);
-        setDisabled(false);
-      } else {
-        // Si no coinciden, se ocultan tras 1 segundo
-        setTimeout(() => {
-          setFlipped([]);
-          setDisabled(false);
-        }, 1000);
+    h2 {
+      margin-bottom: 15px;
+      color: #58a6ff;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4A90E2;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 25px;
+      transition: background-color 0.2s;
+    }
+
+    .btn:hover {
+      background-color: #357abd;
+    }
+
+    /* Grid de 4 columnas para escritorio */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      width: 100%;
+    }
+
+    .card {
+      height: 180px;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #1e1e2f;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      transition: transform 0.2s, background-color 0.3s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      user-select: none;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+    }
+
+    /* Estado cuando la carta está descubierta o emparejada */
+    .card.flipped {
+      background-color: #ffffff;
+      color: #000000;
+      border-color: #4A90E2;
+    }
+
+    .card.matched {
+      background-color: #e6f4ea;
+      border-color: #238636;
+      cursor: default;
+      transform: none;
+    }
+
+    .card img {
+      width: 70px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 6px;
+    }
+
+    .card strong {
+      font-size: 14px;
+      margin-top: 4px;
+      color: #111;
+    }
+
+    .card p {
+      font-size: 11px;
+      color: #555;
+      margin-top: 4px;
+      line-height: 1.2;
+    }
+
+    .card-back-icon {
+      font-size: 28px;
+    }
+
+    /* Adaptación para pantallas de celulares */
+    @media (max-width: 600px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      .card {
+        height: 160px;
+      }
+      .card img {
+        width: 55px;
+        height: 55px;
       }
     }
-  };
+  </style>
+</head>
+<body>
 
-  return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
-      <h2>Juego de Memoria Astronómico</h2>
-      <button 
-        onClick={initializeGame}
-        style={{
-          padding: '10px 20px',
-          fontSize: '16px',
-          backgroundColor: '#4A90E2',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          marginBottom: '20px'
-        }}
-      >
-        Reiniciar Juego
-      </button>
+  <div class="container">
+    <h2>Juego de Memoria Astronómico</h2>
+    <button class="btn" onclick="initializeGame()">Reiniciar Juego</button>
+    <div class="grid" id="grid"></div>
+  </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '15px'
-      }}>
-        {cards.map((card, index) => {
-          const isFlipped = flipped.includes(index) || matched.includes(card.idName);
+  <script>
+    // 1. Tus 10 elementos base
+    const BASE_ITEMS = [
+      {
+        idName: 'sol',
+        title: 'Sol',
+        description: 'Nuestra estrella central y principal fuente de luz y energía.',
+        image: 'sol.jpeg',
+      },
+      {
+        idName: 'luna',
+        title: 'Luna',
+        description: 'El único satélite natural de la Tierra.',
+        image: 'luna.jpeg',
+      },
+      {
+        idName: 'mercurio',
+        title: 'Mercurio',
+        description: 'El planeta más rápido del Sistema Solar.',
+        image: 'mercurio.jpeg',
+      },
+      {
+        idName: 'venus',
+        title: 'Venus',
+        description: 'El planeta más caliente.',
+        image: 'venus.jpeg',
+      },
+      {
+        idName: 'tierra',
+        title: 'Tierra',
+        description: 'El único planeta que tiene vida.',
+        image: 'tierra.jpeg',
+      },
+      {
+        idName: 'marte',
+        title: 'Marte',
+        description: 'El planeta rojo, conocido por su óxido de hierro en superficie.',
+        image: 'marte.jpeg',
+      },
+      {
+        idName: 'jupiter',
+        title: 'Júpiter',
+        description: 'El planeta más grande del Sistema Solar.',
+        image: 'jupiter.jpeg',
+      },
+      {
+        idName: 'saturno',
+        title: 'Saturno',
+        description: 'Famoso por su vistoso sistema de anillos brillantes.',
+        image: 'saturno.jpeg',
+      },
+      {
+        idName: 'urano',
+        title: 'Urano',
+        description: 'El planeta que gira acostado.',
+        image: 'urano.jpeg',
+      },
+      {
+        idName: 'neptuno',
+        title: 'Neptuno',
+        description: 'El planeta con vientos supersónicos',
+        image: 'neptuno.jpeg',
+      },
+    ];
 
-          return (
-            <div
-              key={card.uniqueId}
-              onClick={() => handleCardClick(index)}
-              style={{
-                height: '180px',
-                border: '1px solid #ccc',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                backgroundColor: isFlipped ? '#fff' : '#1e1e2f',
-                color: isFlipped ? '#000' : '#fff',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '10px',
-                boxSizing: 'border-box',
-                transition: 'transform 0.3s, background-color 0.3s',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-              }}
-            >
-              {isFlipped ? (
-                <>
-                  <img 
-                    src={card.image} 
-                    alt={card.title} 
-                    style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '50%' }} 
-                  />
-                  <strong style={{ marginTop: '8px', fontSize: '14px' }}>{card.title}</strong>
-                  <p style={{ fontSize: '11px', color: '#555', margin: '4px 0 0 0' }}>
-                    {card.description}
-                  </p>
-                </>
-              ) : (
-                <span style={{ fontSize: '24px' }}>✨</span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+    let cards = [];
+    let flippedIndices = [];
+    let matchedIds = [];
+    let disabled = false;
+
+    // Función para mezclar arreglo (Algoritmo Fisher-Yates)
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    function initializeGame() {
+      // Duplicar elementos para formar las 10 parejas (20 cartas en total)
+      const pairedCards = BASE_ITEMS.flatMap((item) => [
+        { ...item, uniqueId: `${item.idName}-1` },
+        { ...item, uniqueId: `${item.idName}-2` }
+      ]);
+
+      cards = shuffleArray(pairedCards);
+      flippedIndices = [];
+      matchedIds = [];
+      disabled = false;
+
+      renderGrid();
+    }
+
+    function renderGrid() {
+      const gridContainer = document.getElementById('grid');
+      gridContainer.innerHTML = '';
+
+      cards.forEach((card, index) => {
+        const isFlipped = flippedIndices.includes(index) || matchedIds.includes(card.idName);
+        const isMatched = matchedIds.includes(card.idName);
+
+        const cardElement = document.createElement('div');
+        cardElement.className = `card ${isFlipped ? 'flipped' : ''} ${isMatched ? 'matched' : ''}`;
+
+        if (isFlipped) {
+          cardElement.innerHTML = `
+            <img src="${card.image}" alt="${card.title}">
+            <strong>${card.title}</strong>
+            <p>${card.description}</p>
+          `;
+        } else {
+          cardElement.innerHTML = `<span class="card-back-icon">✨</span>`;
+        }
+
+        cardElement.addEventListener('click', () => handleCardClick(index));
+        gridContainer.appendChild(cardElement);
+      });
+    }
+
+    function handleCardClick(index) {
+      if (disabled || flippedIndices.includes(index) || matchedIds.includes(cards[index].idName)) {
+        return;
+      }
+
+      flippedIndices.push(index);
+      renderGrid();
+
+      if (flippedIndices.length === 2) {
+        disabled = true;
+        const [firstIndex, secondIndex] = flippedIndices;
+
+        if (cards[firstIndex].idName === cards[secondIndex].idName) {
+          matchedIds.push(cards[firstIndex].idName);
+          flippedIndices = [];
+          disabled = false;
+          renderGrid();
+
+          if (matchedIds.length === BASE_ITEMS.length) {
+            setTimeout(() => alert("🎉 ¡Felicidades! Encontraste todas las parejas astronómicas."), 300);
+          }
+        } else {
+          setTimeout(() => {
+            flippedIndices = [];
+            disabled = false;
+            renderGrid();
+          }, 1000);
+        }
+      }
+    }
+
+    // Iniciar al cargar la página
+    initializeGame();
+  </script>
+</body>
+</html>
